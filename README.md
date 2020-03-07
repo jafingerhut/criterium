@@ -60,7 +60,9 @@ get progress information on `*out*`.
 ```
 
 Lower level functions are available, that separate benchmark statistic
-generation and reporting.
+generation and reporting.  `benchmark` and `quick-benchmark` return
+Clojure maps containing multiple measurements of running your
+expression, and details about your JVM version and operating system.
 
 ```clj
 (report-result (benchmark (Thread/sleep 1000) {:verbose true}))
@@ -70,11 +72,62 @@ generation and reporting.
 Note that results are returned to the user to prevent JIT from recognising that
 the results are not used.
 
+| "Thorough" benchmarks | "Quick" benchmarks | Notes |
+| --------------------- | ------------------ | ----- |
+| bench     | quick-bench     | Human-readable output printed.  Return `nil`. |
+| benchmark | quick-benchmark | No printing, which can be done separately using `report-result`.  Return map of measurements. |
+
+| "Thorough" benchmarks | "Quick" benchmarks | Parameter |
+| --------------------- | ------------------ | --------- |
+| 10 sec |   5 sec | `:warmup-jit-period`, units: nanoseconds |
+|  1 sec | 0.5 sec | `:target-execution-time`, units: nanoseconds |
+| 60     | 6       | `:samples`, units: number of samples |
+| 70 sec = 10 + 60 x 1 | 8 sec = 5 + 6 * 0.5 | Approximate time required for one execution, using default parameters |
+
+Examples of benchmark runs that use non-default parameters are shown below.  `:verbose` can be omitted for shorter output.
+
+```clojure
+(use 'criterium.core)
+
+;; s-to-ns is simply 1e9, useful for conversion from seconds to nanoseconds
+
+(bench (Thread/sleep 25)
+       :verbose
+       :warmup-jit-period (* 7 s-to-ns)
+       :target-execution-time (* 2 s-to-ns)
+       :samples 10)
+;; prints human-readable results, not shown here
+
+(quick-bench (Thread/sleep 25)
+             :verbose
+             :warmup-jit-period (* 7 s-to-ns)
+             :target-execution-time (* 2 s-to-ns)
+             :samples 10)
+;; prints human-readable results, not shown here
+
+(def r1 (benchmark (Thread/sleep 25)
+                   {:warmup-jit-period (* 7 s-to-ns)
+                    :target-execution-time (* 2 s-to-ns)
+                    :samples 10}))
+;; returns map, not shown here
+(report-result r1 :verbose)
+;; prints human-readable results, not shown here
+
+(def r2 (quick-benchmark (Thread/sleep 25)
+                         {:warmup-jit-period (* 7 s-to-ns)
+                          :target-execution-time (* 2 s-to-ns)
+                          :samples 10}))
+;; returns map, not shown here
+(report-result r2 :verbose)
+;; prints human-readable results, not shown here
+```
+
 ## Measurement Overhead Estimation
 
 Criterium will automatically estimate a time for its measurement
-overhead.  The estimate is normally made once per session, and is
-available in the `criterium.core/estimated-overhead-cache` var.
+overhead.  The estimate is normally made once per session, taking
+about 17 to 18 seconds, and is available in the
+`criterium.core/estimated-overhead-cache` var.
 
 If the estimation is made while there is a lot of other processing
 going on, then benchmarking quick functions may report small negative
