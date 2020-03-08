@@ -74,12 +74,13 @@ the results are not used.
 
 | "Thorough" benchmarks | "Quick" benchmarks | Notes |
 | --------------------- | ------------------ | ----- |
-| bench     | quick-bench     | Returns `nil`.  Prints human-readable output. |
-| benchmark | quick-benchmark | Returns map of measurement data.  Prints nothing.  Printing can be done separately using `report-result`. |
+| `bench`     | `quick-bench`     | Returns `nil`.  Prints human-readable output. |
+| `benchmark` | `quick-benchmark` | Returns map of measurement data.  Prints nothing.  Printing can be done separately using `report-result`. |
 | at least 70 sec | at least 8 sec | Minimum time to run one benchmark, with default parameter values (see below for their values and how to change them). |
 
 The table below shows several options that can be specified when
-running benchmarks.
+running benchmarks, and their default values if you do not specify
+one.
 
 | "Thorough" benchmarks | "Quick" benchmarks | Parameter |
 | --------------------- | ------------------ | --------- |
