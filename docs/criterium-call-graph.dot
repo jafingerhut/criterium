@@ -1,0 +1,308 @@
+digraph G {
+
+rankdir="LR";
+node [shape=box];
+
+subgraph cluster_0 {
+	 style=filled;
+	 color=lightgrey;
+	 label="Legend";
+	 color1 [label="Common function/macro called\nby users of criterium library" style=filled color=springgreen];
+	 color2 [label="Arg processing, init,\nand/or warmup code" style=filled color=gold];
+	 color3 [label="Core benchmark code, which runs\nthe user's expression many times" style=filled color=orangered];
+	 color4 [label="Users's expression to measure,\nwrapped in a Clojure fn" style=filled color=magenta];
+	 color6 [label="Post-processing code" style=filled color=powderblue];
+	 color7 [label="Not called from criterium library itself,\nbut perhaps called by some users of lib\nThere are many other functions in\nthis category that are not in this figure." style=filled color=lightgrey];
+}
+
+quick_bench [label="quick-bench\n(macro)" shape=ellipse style=filled color=springgreen];
+quick_bench -> extract_report_options [label="1 call"];
+quick_bench -> report_result [label="1 call"];
+quick_bench -> quick_benchmark [label="1 call"];
+
+bench [label="bench\n(macro)" shape=ellipse style=filled color=springgreen];
+bench -> extract_report_options [label="1 call"];
+bench -> report_result [label="1 call"];
+bench -> benchmark [label="1 call"];
+
+extract_report_options [label="extract-report-options" style=filled color=gold];
+
+report_result [label="report-result" style=filled color=springgreen];
+report_result -> report_point_estimate;
+report_result -> report_point_estimate_sqrt;
+report_result -> report_outliers;
+
+with_progress_reporting [label="with-progress-reporting\n(macro)" shape=ellipse style=filled color=springgreen];
+
+report_outliers [label="report-outliers" style=filled color=powderblue];
+report_outliers -> outlier_effect;
+report_outliers -> report;
+
+outlier_effect [label="outlier-effect" style=filled color=powderblue];
+
+report_point_estimate_sqrt [label="report-point-estimate-sqrt" style=filled color=powderblue];
+report_point_estimate_sqrt -> scale_time;
+report_point_estimate_sqrt -> report;
+report_point_estimate_sqrt -> format_value;
+
+report_estimate_sqrt [label="report-estimate-sqrt" style=filled color=lightgrey];
+report_estimate_sqrt -> scale_time;
+report_estimate_sqrt -> report;
+report_estimate_sqrt -> format_value;
+
+report_point_estimate [label="report-point-estimate" style=filled color=powderblue];
+report_point_estimate -> scale_time;
+report_point_estimate -> report;
+report_point_estimate -> format_value;
+
+report_estimate [label="report-estimate" style=filled color=lightgrey];
+report_estimate -> scale_time;
+report_estimate -> report;
+report_estimate -> format_value;
+
+format_value [label="format-value" style=filled color=powderblue];
+
+scale_time [label="scale-time" style=filled color=powderblue];
+
+report [label="report" style=filled color=powderblue];
+
+quick_benchmark [label="quick-benchmark\n(macro)" shape=ellipse style=filled color=springgreen];
+quick_benchmark -> quick_benchmark_star [label="1 call"];
+
+quick_benchmark_star [label="quick-benchmark*"];
+quick_benchmark_star -> benchmark_star [label="1 call"];
+
+benchmark_round_robin [label="benchmark-round-robin\n(macro)" shape=ellipse style=filled color=springgreen];
+benchmark_round_robin -> benchmark_round_robin_star [label="1 call"];
+
+benchmark_round_robin_star [label="benchmark-round-robin*"];
+benchmark_round_robin_star -> run_benchmarks_round_robin [label="1 call"];
+benchmark_round_robin_star -> benchmark_stats [label="(# benchmarked exprs) calls"];
+
+benchmark [label="benchmark\n(macro)" shape=ellipse style=filled color=springgreen];
+benchmark -> benchmark_star [label="1 call"];
+
+benchmark_star [label="benchmark*"];
+benchmark_star -> warn_on_suspicious_jvm_options [label="1 call"];
+benchmark_star -> estimated_overhead [label="1 call"];
+benchmark_star -> run_benchmark [label="1 call"];
+benchmark_star -> benchmark_stats [label="1 call"];
+
+estimated_overhead [label="estimated-overhead" style=filled color=gold];
+
+warn_on_suspicious_jvm_options [label="warn-on-suspicious-jvm-options" style=filled color=gold];
+warn_on_suspicious_jvm_options -> jvm_jit_name;
+//warn_on_suspicious_jvm_options -> runtime_details;
+
+jvm_jit_name [label="jvm-jit-name\ncalls 3 or 4 JVM methods" style=filled color=gold];
+
+os_details [label="os-details\ncalls 3 or 4 JVM methods" style=filled color=powderblue];
+
+//runtime_details [label="runtime-details\ncalls about 10 JVM methods"];
+
+benchmark_stats [label="benchmark-stats" style=filled color=powderblue];
+// TBD: probably missing some function calls
+//benchmark_stats -> outliers;
+//benchmark_stats -> bootstrap_bca;
+//benchmark_stats -> mean;
+//benchmark_stats -> variance;
+//benchmark_stats -> quantile;
+//benchmark_stats -> tail_quantile;
+//benchmark_stats -> well_rng_1024a;
+//benchmark_stats -> outlier_significance;
+//benchmark_stats -> scale_bootstrap_estimate;
+benchmark_stats -> os_details;
+//benchmark_stats -> runtime_details;
+benchmark_stats -> benchmark_stats_many_other_callees;
+
+benchmark_stats_many_other_callees [label="benchmark-stats calls many\nother functions not shown here" style=filled color=powderblue];
+
+run_benchmarks_round_robin [label="run-benchmarks-round-robin" style=filled color=orangered];
+run_benchmarks_round_robin -> rbrr_force_gc [label="1 call"];
+run_benchmarks_round_robin -> rbrr_time_body [label="(# benchmarked exprs) calls"];
+//run_benchmarks_round_robin -> progress_copy1;
+run_benchmarks_round_robin -> rbrr_warmup_for_jit [label="(# benchmarked exprs) calls"];
+run_benchmarks_round_robin -> rbrr_estimate_execution_count [label="(# benchmarked exprs) calls"];
+run_benchmarks_round_robin -> rbrr_collect_samples [label="sample-count * (# benchmarked exprs) calls,\neach with sample-count=1" style=bold penwidth=5];
+run_benchmarks_round_robin -> rbrr_final_gc [label="1 call"];
+run_benchmarks_round_robin -> rbrr_final_gc_warn [label="1 call"];
+
+rbrr_force_gc [label="force-gc\n(see elsewhere)" style=filled color=gold];
+rbrr_time_body [label="time-body\n(see elsewhere)" style=filled color=gold];
+rbrr_warmup_for_jit [label="warmup-for-jit\n(see elsewhere)" style=filled color=gold];
+rbrr_estimate_execution_count [label="estimate-execution-count\n(see elsewhere)" style=filled color=gold];
+rbrr_collect_samples [label="collect-samples\n(see elsewhere)" style=filled color=orangered];
+rbrr_final_gc [label="final-gc\n(see elsewhere)" style=filled color=powderblue];
+rbrr_final_gc_warn [label="final-gc-warn\n(see elsewhere)" style=filled color=powderblue];
+
+
+run_benchmark [label="run-benchmark" style=filled color=orangered];
+run_benchmark -> run_benchmark_force_gc [label="2 calls,\nduring init"];
+run_benchmark -> run_benchmark_time_body [label="1 call"];
+//run_benchmark -> progress_copy2;
+run_benchmark -> warmup_for_jit [label="1 call"];
+run_benchmark -> estimate_execution_count [label="1 call"];
+run_benchmark -> collect_samples [label="1 call from run-benchmark to\ncollect-samples with args:\nsample-count n-exec f gc-before-sample\n\nsample-count from user opt or default\n\nn-exec calculated at run time so\n1 sample takes about 1 second"];
+run_benchmark -> final_gc [label="1 call"];
+run_benchmark -> final_gc_warn [label="1 call"];
+
+run_benchmark_time_body [label="time-body (see elsewhere)" style=filled color=gold];
+
+run_benchmark_force_gc [label="force-gc (see elsewhere)" style=filled color=gold]
+
+estimate_execution_count [label="estimate-execution-count" style=filled color=gold];
+//estimate_execution_count -> progress_copy4;
+//estimate_execution_count -> debug;
+estimate_execution_count -> jvm_class_loader_state;
+estimate_execution_count -> jvm_compilation_state;
+estimate_execution_count -> collect_samples_copy2 [label="1 call\nargs=1 n f gc-before-sample"];
+
+warmup_for_jit [label="warmup-for-jit" style=filled color=gold];
+//warmup_for_jit -> progress_copy3;
+warmup_for_jit -> jvm_class_loader_state;
+warmup_for_jit -> jvm_compilation_state;
+warmup_for_jit -> warmup_for_jit_time_body;
+warmup_for_jit -> warmup_for_jit_execute_expr;
+warmup_for_jit -> state_delta;
+
+state_delta [label="state-delta" style=filled color=gold];
+
+jvm_class_loader_state [label="jvm-class-loader-state\ncalls only 3 or 4 JVM methods" style=filled color=gold];
+jvm_compilation_state [label="jvm-compilation-state\ncalls only 3 or 4 JVM methods" style=filled color=gold];
+
+warmup_for_jit_time_body [label="time-body (see elsewhere)" style=filled color=gold];
+
+warmup_for_jit_execute_expr [label="execute-expr (see elsewhere)" style=filled color=gold];
+
+collect_samples [label=<<TABLE CELLPADDING="0" BORDER="0">
+<TR><TD ALIGN="left">collect-samples</TD></TR>
+<TR><TD ALIGN="left">[sample-count execution-count f gc-before-sample]</TD></TR>
+<TR><TD ALIGN="left">(let [result (object-array sample-count)]</TD></TR>
+<TR><TD ALIGN="left">  (loop [i (long 0)]</TD></TR>
+<TR><TD ALIGN="left">    (if (&lt; i sample-count)</TD></TR>
+<TR><TD ALIGN="left">      (do</TD></TR>
+<TR><TD ALIGN="left">        (when gc-before-sample</TD></TR>
+<TR><TD ALIGN="left">          (force-gc))</TD></TR>
+<TR><TD ALIGN="left">        (aset result i (execute-expr execution-count f))</TD></TR>
+<TR><TD ALIGN="left">        (recur (unchecked-inc i)))</TD></TR>
+<TR><TD ALIGN="left">      result)))</TD></TR>
+</TABLE>> style=filled color=orangered];
+
+collect_samples -> collect_samples_force_gc [label="sample-count calls if\ngc-before-sample is true\notherwise 0 calls" style=dashed];
+collect_samples -> execute_expr [label="sample-count calls" style=bold penwidth=5];
+collect_samples -> collect_samples_object_array [label="1 call"];
+collect_samples -> collect_samples_aset [label="sample-count calls"];
+collect_samples -> collect_samples_unchecked_inc [label="sample-count calls"];
+
+collect_samples_copy2 [label="collect-samples\n(see elsewhere)" style=filled color=gold];
+
+
+collect_samples_object_array [label="object-array\n(clojure.core)\nonly called once\nper call to collect-samples,\nto alloc array with\nsize sample-count" style=filled color=gold];
+
+collect_samples_force_gc [label="force-gc" style=filled color=orangered];
+
+collect_samples_force_gc [label="force-gc" style=filled color=orangered];
+//collect_samples_force_gc -> debug;
+collect_samples_force_gc -> heap_used [label="2 calls"];
+collect_samples_force_gc -> System_runFinalization [label="1 call"];
+collect_samples_force_gc -> System_gc [label="1 call"];
+
+System_runFinalization [label="java.lang.System/runFinalization" style=filled color=orangered];
+System_gc [label="java.lang.System/gc" style=filled color=orangered];
+
+heap_used [label="heap-used" style=filled color=orangered];
+heap_used -> Runtime_getRuntime [label="1 call"];
+heap_used -> Runtime_totalMemory [label="1 call"];
+heap_used -> Runtime_freeMemory [label="1 call"];
+
+Runtime_getRuntime [label="java.lang.Runtime/getRuntime" style=filled color=orangered];
+Runtime_totalMemory [label="java.lang.Runtime/totalMemory" style=filled color=orangered];
+Runtime_freeMemory [label="java.lang.Runtime/freeMemory" style=filled color=orangered];
+
+collect_samples_aset [label="aset\n(clojure.core)" style=filled color=orangered];
+
+collect_samples_unchecked_inc [label="unchecked-inc\n(clojure.core)" style=filled color=orangered];
+
+//execute_expr [label="execute-expr" style=filled color=orangered];
+
+execute_expr [label=<<TABLE CELLPADDING="0" BORDER="0">
+<TR><TD ALIGN="left">execute-expr</TD></TR>
+<TR><TD ALIGN="left">[n f]</TD></TR>
+<TR><TD ALIGN="left">(let [time-and-ret (execute-expr-core-timed-part n f)]</TD></TR>
+<TR><TD ALIGN="left">  ;; just for good measure, use the mutable value</TD></TR>
+<TR><TD ALIGN="left">  (get-place mutable-place)</TD></TR>
+<TR><TD ALIGN="left">  time-and-ret)</TD></TR>
+</TABLE>> style=filled color=orangered];
+execute_expr -> execute_expr_core_timed_part [label="1 call"];
+execute_expr -> get_place [label="1 call"];
+
+//execute_expr_core_timed_part [label="execute-expr-core-timed-part" style=filled color=orangered];
+
+execute_expr_core_timed_part [label=<<TABLE CELLPADDING="0" BORDER="0">
+<TR><TD ALIGN="left">execute-expr-core-timed-part</TD></TR>
+<TR><TD ALIGN="left">  [n f]</TD></TR>
+<TR><TD ALIGN="left">  (time-body</TD></TR>
+<TR><TD ALIGN="left">   (loop [i (long (dec n))</TD></TR>
+<TR><TD ALIGN="left">          v (f)]</TD></TR>
+<TR><TD ALIGN="left">     (set-place mutable-place v)</TD></TR>
+<TR><TD ALIGN="left">     (if (pos? i)</TD></TR>
+<TR><TD ALIGN="left">       (recur (unchecked-dec i) (f))</TD></TR>
+<TR><TD ALIGN="left">       v))))</TD></TR>
+</TABLE>> style=filled color=orangered];
+execute_expr_core_timed_part -> time_body [label="1 call"];
+execute_expr_core_timed_part -> f [label="n calls" style=bold penwidth=5];
+execute_expr_core_timed_part -> set_place [label="n calls"];
+execute_expr_core_timed_part -> unchecked_dec [label="n calls"];
+
+get_place [label="get-place" style=filled color=orangered];
+
+f [label="f is fn wrapped around\ncaller's expression\nto measure" style=filled color=magenta];
+
+set_place [label="set-place" style=filled color=orangered];
+
+unchecked_dec [label="unchecked-dec\n(clojure.core)" style=filled color=orangered];
+
+time_body [label="time-body\n(macro)" shape=ellipse style=filled color=orangered];
+time_body -> timestamp [label="2 calls"];
+
+timestamp [label="timestamp\n(macro)" shape=ellipse style=filled color=orangered];
+timestamp -> nanoTime [label="1 call"];
+
+nanoTime [label="java.lang.System/nanoTime" style=filled color=orangered];
+
+//progress_copy1 [label="progress"];
+//progress_copy2 [label="progress"];
+//progress_copy3 [label="progress"];
+//progress_copy4 [label="progress"];
+
+final_gc [label="final-gc" style=filled color=powderblue];
+//final_gc -> progress;
+final_gc -> final_gc_call_to_time_body [label="1 call"];
+final_gc -> final_gc_call_to_forge_gc [label="1 call"];
+
+final_gc_call_to_time_body [label="time-body (see elsewhere)" style=filled color=powderblue];
+final_gc_call_to_forge_gc [label="force-gc (see elsewhere)" style=filled color=powderblue];
+
+final_gc_warn [label="final-gc-warn" style=filled color=powderblue];
+//final_gc_warn -> progress;
+//final_gc_warn -> warn;
+
+time_body_with_jvm_state [label="time-body-with-jvm-state" style=filled color=lightgrey];
+
+system_properties [label="system-properties" style=filled color=lightgrey];
+
+clear_cache [label="clear-cache" style=filled color=lightgrey];
+clear_cache -> clear_cache_mac;
+clear_cache -> clear_cache_linux;
+
+clear_cache_mac [label="clear-cache-mac" style=filled color=lightgrey];
+
+clear_cache_linux [label="clear-cache-linux" style=filled color=lightgrey];
+
+timestamp_2 [label="timestamp-2" style=filled color=lightgrey];
+
+replace_ret_val_in_time_body_result [label="replace-ret-val-in-time-body-result" style=filled color=lightgrey];
+
+memory [label="memory" style=filled color=lightgrey];
+
+}
