@@ -93,7 +93,7 @@ one.
 Notes on `:gc-before-sample`:
 
 When `:gc-before-sample` is `true`, criterium calls
-[`java.lang.System/gc`](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#gc--))
+[`java.lang.System/gc`](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#gc--)
 `:samples` times, once before each sample is taken.  The intent is
 that each sample will be more likely to start with all
 no-longer-referenced garbage objects reclaimed in memory (this is not
