@@ -74,8 +74,11 @@ the results are not used.
 
 | "Thorough" benchmarks | "Quick" benchmarks | Notes |
 | --------------------- | ------------------ | ----- |
-| bench     | quick-bench     | Human-readable output printed.  Return `nil`. |
-| benchmark | quick-benchmark | No printing, which can be done separately using `report-result`.  Return map of measurements. |
+| bench     | quick-bench     | Returns `nil`.  Prints human-readable output. |
+| benchmark | quick-benchmark | Returns map of measurement data.  Prints nothing.  Printing can be done separately using `report-result`. |
+
+The table below shows several options that can be specified when
+running benchmarks.
 
 | "Thorough" benchmarks | "Quick" benchmarks | Parameter |
 | --------------------- | ------------------ | --------- |
@@ -83,8 +86,30 @@ the results are not used.
 |  1 sec | 0.5 sec | `:target-execution-time`, units: nanoseconds |
 | 60     | 6       | `:samples`, units: number of samples |
 | 70 sec = 10 + 60 x 1 | 8 sec = 5 + 6 * 0.5 | Approximate time required for one execution, using default parameters |
+| `true` | `true` | `:gc-before-sample`, boolean. See Note 1 below. |
 
-Examples of benchmark runs that use non-default parameters are shown below.  `:verbose` can be omitted for shorter output.
+Notes on `:gc-before-sample`:
+
+When `:gc-before-sample` is `true`, criterium calls
+[`java.lang.System/gc`](https://docs.oracle.com/javase/8/docs/api/java/lang/System.html#gc--))
+`:samples` times, once before each sample is taken.  The intent is
+that each sample will be more likely to start with all
+no-longer-referenced garbage objects reclaimed in memory (this is not
+guaranteed, since the documented behavior of the `gc` method is that
+it "suggests that the Java Virtual Machine expend effort").  Note that
+this call is done once before each sample, not once before each
+execution of your benchmarked expression.  The time for these garbage
+collection runs is not directly included in the measurements. but
+depending upon which garbage collector is in use by the JVM, it may
+affect the measurements.
+
+Note 1: All criterium versions 0.4.0 through 0.4.5 have a bug where
+the value of the `:gc-before-sample` option is always `true`, and it
+cannot be changed to `false` (without [fixing the
+bug](https://github.com/hugoduncan/criterium/pull/49)).
+
+Below are examples of benchmark runs that use non-default parameter
+values.  `:verbose` can be omitted for shorter output.
 
 ```clojure
 (use 'criterium.core)
